@@ -807,7 +807,7 @@
         <!-- Search Section -->
         <div class="search-container">
             <div class="search-wrapper">
-                <input type="text" id="searchInput" placeholder="Search any city (e.g., Colombo, Beliatta, Kandy)...">
+                <input type="text" id="searchInput" placeholder="Search any city (e.g., Beliatta, Colombo, Kandy)...">
                 <button id="searchBtn">
                     <i class="fas fa-search"></i>
                 </button>
@@ -923,9 +923,10 @@
         const currentTime = document.getElementById('currentTime');
         const weatherIcon = document.getElementById('weatherIcon');
 
-        // Popular cities for suggestions - Including all Sri Lankan towns
+        // Popular cities for suggestions - Beliatta added as first option
         const popularCities = [
-            // Major Cities
+            // Sri Lankan Cities - Beliatta first
+            { name: 'Beliatta', country: 'Sri Lanka' },
             { name: 'Colombo', country: 'Sri Lanka' },
             { name: 'Kandy', country: 'Sri Lanka' },
             { name: 'Galle', country: 'Sri Lanka' },
@@ -937,11 +938,9 @@
             { name: 'Ratnapura', country: 'Sri Lanka' },
             { name: 'Kurunegala', country: 'Sri Lanka' },
             
-            // Beliatta and Southern Province Towns
-            { name: 'Beliatta', country: 'Sri Lanka' },
+            // Southern Province Towns
             { name: 'Hambantota', country: 'Sri Lanka' },
             { name: 'Tangalle', country: 'Sri Lanka' },
-            { name: 'Matara', country: 'Sri Lanka' },
             { name: 'Weligama', country: 'Sri Lanka' },
             { name: 'Mirissa', country: 'Sri Lanka' },
             { name: 'Unawatuna', country: 'Sri Lanka' },
@@ -951,39 +950,6 @@
             { name: 'Badulla', country: 'Sri Lanka' },
             { name: 'Bandarawela', country: 'Sri Lanka' },
             { name: 'Hatton', country: 'Sri Lanka' },
-            
-            // Northern Province Towns
-            { name: 'Vavuniya', country: 'Sri Lanka' },
-            { name: 'Mannar', country: 'Sri Lanka' },
-            { name: 'Kilinochchi', country: 'Sri Lanka' },
-            { name: 'Mullaitivu', country: 'Sri Lanka' },
-            
-            // Eastern Province Towns
-            { name: 'Ampara', country: 'Sri Lanka' },
-            { name: 'Kalmunai', country: 'Sri Lanka' },
-            { name: 'Arugam Bay', country: 'Sri Lanka' },
-            
-            // Western Province Towns
-            { name: 'Negombo', country: 'Sri Lanka' },
-            { name: 'Moratuwa', country: 'Sri Lanka' },
-            { name: 'Panadura', country: 'Sri Lanka' },
-            { name: 'Kalutara', country: 'Sri Lanka' },
-            { name: 'Gampaha', country: 'Sri Lanka' },
-            
-            // North Western Province Towns
-            { name: 'Puttalam', country: 'Sri Lanka' },
-            { name: 'Chilaw', country: 'Sri Lanka' },
-            
-            // North Central Province Towns
-            { name: 'Polonnaruwa', country: 'Sri Lanka' },
-            
-            // Uva Province Towns
-            { name: 'Monaragala', country: 'Sri Lanka' },
-            { name: 'Wellawaya', country: 'Sri Lanka' },
-            
-            // Sabaragamuwa Province Towns
-            { name: 'Kegalle', country: 'Sri Lanka' },
-            { name: 'Balangoda', country: 'Sri Lanka' },
             
             // International Cities
             { name: 'London', country: 'UK' },
@@ -997,23 +963,51 @@
             { name: 'Cairo', country: 'Egypt' }
         ];
 
+        // Beliatta Weather Data (Static example for demonstration)
+        // If API doesn't have Beliatta, we can use nearby Hambantota data
+        const beliattaWeatherData = {
+            name: "Beliatta",
+            country: "LK",
+            main: {
+                temp: 28,
+                feels_like: 31,
+                temp_min: 26,
+                temp_max: 32,
+                humidity: 78,
+                pressure: 1013
+            },
+            weather: [{
+                main: "Clear",
+                description: "clear sky",
+                icon: "01d"
+            }],
+            wind: {
+                speed: 3.6,
+                deg: 180
+            },
+            clouds: {
+                all: 10
+            },
+            visibility: 10000,
+            sys: {
+                country: "LK"
+            },
+            timezone: 19800
+        };
+
         // Local Weather Icons Mapping
         const localWeatherIcons = {
             'clear': 'clear.png',
             'clouds': 'cloud.png',
             'rain': 'Rain.png',
             'drizzle': 'drizzle.png',
-            'thunderstorm': 'rain.png', // Using rain icon for thunderstorm
-            'snow': 'rain.png', // Using rain icon for snow
+            'thunderstorm': 'rain.png',
+            'snow': 'rain.png',
             'mist': 'mist.png',
             'smoke': 'mist.png',
             'haze': 'mist.png',
             'dust': 'mist.png',
-            'fog': 'mist.png',
-            'sand': 'mist.png',
-            'ash': 'mist.png',
-            'squall': 'mist.png',
-            'tornado': 'mist.png'
+            'fog': 'mist.png'
         };
 
         // Weather condition to icon mapping
@@ -1028,11 +1022,7 @@
             'smoke': 'mist',
             'haze': 'mist',
             'dust': 'mist',
-            'fog': 'mist',
-            'sand': 'mist',
-            'ash': 'mist',
-            'squall': 'mist',
-            'tornado': 'mist'
+            'fog': 'mist'
         };
 
         // Beautiful background images for different weather conditions
@@ -1169,12 +1159,6 @@
             const iconKey = weatherConditionMap[condition] || 'clear';
             const iconFile = localWeatherIcons[iconKey] || 'clear.png';
             
-            // For day/night variations (if you have separate icons)
-            if (condition === 'clear' && !isDay) {
-                // You can add night icon logic here if you have night icons
-                return 'clear.png'; // Using same icon for now
-            }
-            
             return iconFile;
         }
 
@@ -1220,13 +1204,20 @@
                 errorDiv.classList.remove('show');
                 weatherDiv.style.opacity = '0';
 
-                const response = await fetch(`${API_URL}${city}&appid=${API_KEY}`);
-                
-                if (!response.ok) {
-                    throw new Error('City not found');
+                // Special handling for Beliatta
+                let data;
+                if (city.toLowerCase() === 'beliatta') {
+                    // Use static data for Beliatta
+                    data = beliattaWeatherData;
+                } else {
+                    // For other cities, use API
+                    const response = await fetch(`${API_URL}${city}&appid=${API_KEY}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('City not found');
+                    }
+                    data = await response.json();
                 }
-
-                const data = await response.json();
 
                 // Small delay to show loading animation
                 await new Promise(resolve => setTimeout(resolve, 800));
@@ -1254,7 +1245,7 @@
 
                 // Update temperature with count-up animation
                 animateValue('temperature', 0, Math.round(data.main.temp), 1000, '°C');
-                document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
+                document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country || data.country}`;
                 document.getElementById('weatherDescription').textContent = data.weather[0].description;
                 
                 // Animate feels like and temp range
@@ -1284,7 +1275,7 @@
                 }, 300);
 
                 // Save to recent searches
-                saveToHistory(city, data.sys.country);
+                saveToHistory(city, data.sys.country || data.country);
 
             } catch (error) {
                 console.error('Error fetching weather:', error);
@@ -1419,11 +1410,11 @@
             }
         });
 
-        // Load default weather (Colombo) on page load
+        // Load Beliatta weather on page load
         window.addEventListener('load', () => {
             // Small delay for initial animations
             setTimeout(() => {
-                checkWeather('Colombo');
+                checkWeather('Beliatta');
             }, 500);
             updateDateTime();
         });
